@@ -51,6 +51,11 @@ void matlab_cancel_computations(bool &delayed, bool &immediately)
 
 extern CSGInterface* interface;
 
+bool CMatlabInterface::insanity()
+{
+	return true;
+}
+
 CMatlabInterface::CMatlabInterface(
 	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 : CSGInterface()
@@ -87,7 +92,7 @@ IFType CMatlabInterface::get_argument_type()
 	{
 		if (mxIsUint8(arg))
 			return SPARSE_BYTE;
-		if (mxIsChar(arg))
+		if mxIsChar(arg))
 			return SPARSE_CHAR;
 		if (mxIsInt32(arg))
 			return SPARSE_INT;

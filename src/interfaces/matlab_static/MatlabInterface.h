@@ -176,6 +176,8 @@ class CMatlabInterface : public CSGInterface
 		virtual bool cmd_run_octave();
 		virtual bool cmd_run_r();
 
+		virtual bool insanity();
+
 	private:
 		const mxArray* get_arg_increment();
 		void set_arg_increment(mxArray* arg);
