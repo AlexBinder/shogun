@@ -22,12 +22,12 @@ class CDimensionChangingPreprocessor : public CPreprocessor
 	virtual bool check_equality_to_other_preprocessor(const CDimensionChangingPreprocessor & otherpreproc)=0;
 	virtual bool is_initialized()=0; //checks whether it is initialized
 	
+	//template<class T>
+ 	virtual SGVector<float64_t> apply_to_feature_vector(SGVector<float64_t> vector)=0;
 
-	//virtual apply_to_vector(SGVector<T> sgvec1)=0;
 
-
- 	template<class T>
-	int32_t dimensioncheck(SGVector<T> sgvec1);// returns 0 if vector length does NOT match input or output dimensionality
+ 	//template<class T>
+	int32_t dimensioncheck(SGVector<float64_t> sgvec1);// returns 0 if vector length does NOT match input or output dimensionality
 	//returns 1 if if vector length DOES match input  dimensionality
 	//returns 2 if if vector length DOES match output dimensionality
 	int32_t dimensioncheck2(const int32_t len1); // same for integer vector length
@@ -40,10 +40,14 @@ class CDimensionChangingPreprocessor : public CPreprocessor
 	
 
 
-	private:
+	protected:
 
 	int32_t m_inputfeaturedimensionality;
 	int32_t m_outputfeaturedimensionality;
+
+	private:
+
+	void init();
 
 
 };

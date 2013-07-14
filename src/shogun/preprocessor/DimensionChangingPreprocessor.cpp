@@ -4,12 +4,18 @@ using namespace shogun;
 
 CDimensionChangingPreprocessor::CDimensionChangingPreprocessor():m_inputfeaturedimensionality(-1),m_outputfeaturedimensionality(-1)
 {
-
+	init();
 }
 
 CDimensionChangingPreprocessor::~CDimensionChangingPreprocessor()
 {
 	//does nothing yet
+}
+
+void CDimensionChangingPreprocessor::init()
+{
+	SG_ADD(&m_inputfeaturedimensionality, "m_inputfeaturedimensionality", "m_inputfeaturedimensionality",MS_NOT_AVAILABLE);
+	SG_ADD(&m_outputfeaturedimensionality, "m_outputfeaturedimensionality", "m_outputfeaturedimensionality",MS_NOT_AVAILABLE);
 }
 
 int32_t CDimensionChangingPreprocessor::get_inputfeaturedimensionality()
@@ -37,8 +43,8 @@ void CDimensionChangingPreprocessor::set_outputfeaturedimensionality(const int32
 }
 
 
-template<class T>
-int32_t CDimensionChangingPreprocessor::dimensioncheck(SGVector<T> sgvec1)
+//template<class T>
+int32_t CDimensionChangingPreprocessor::dimensioncheck(SGVector<float64_t> sgvec1)
 {
   int32_t len1=sgvec1.vlen;
   if(len1==get_inputfeaturedimensionality())

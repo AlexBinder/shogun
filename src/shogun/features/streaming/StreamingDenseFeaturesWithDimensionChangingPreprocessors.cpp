@@ -9,38 +9,27 @@ CStreamingDenseFeaturesWithDimensionChangingPreprocessors::CStreamingDenseFeatur
 holds_DimensionChangingPreprocessors=new CDynamicObjectArray(1);
 SG_REF(holds_DimensionChangingPreprocessors);
 
+init();
+
 }
 
-template<class T> CStreamingDenseFeaturesWithDimensionChangingPreprocessors::~CStreamingDenseFeaturesWithDimensionChangingPreprocessors()
+//template<class T> 
+CStreamingDenseFeaturesWithDimensionChangingPreprocessors::~CStreamingDenseFeaturesWithDimensionChangingPreprocessors()
 {
 SG_UNREF(holds_DimensionChangingPreprocessors);
 }
 
-EFeatureClass template<class T> CStreamingDenseFeaturesWithDimensionChangingPreprocessors::get_feature_class()
+EFeatureClass CStreamingDenseFeaturesWithDimensionChangingPreprocessors::get_feature_class() const
 {
   return C_STREAMING_DENSE_WITH_DIMENSION_CHANGING_PREPROCESSORS;
 }
 
-#define GET_FEATURE_TYPE(f_type, sg_type)				\
-template<> CStreamingDenseFeaturesWithDimensionChangingPreprocessors<sg_type>::get_feature_type() const \
-{									\
-	return f_type;							\
+
+EFeatureType CStreamingDenseFeaturesWithDimensionChangingPreprocessors::get_feature_type() const 
+{ 									
+	return F_DREAL;							
 }
 
-GET_FEATURE_TYPE(F_BOOL, bool)
-GET_FEATURE_TYPE(F_CHAR, char)
-GET_FEATURE_TYPE(F_BYTE, uint8_t)
-GET_FEATURE_TYPE(F_BYTE, int8_t)
-GET_FEATURE_TYPE(F_SHORT, int16_t)
-GET_FEATURE_TYPE(F_WORD, uint16_t)
-GET_FEATURE_TYPE(F_INT, int32_t)
-GET_FEATURE_TYPE(F_UINT, uint32_t)
-GET_FEATURE_TYPE(F_LONG, int64_t)
-GET_FEATURE_TYPE(F_ULONG, uint64_t)
-GET_FEATURE_TYPE(F_SHORTREAL, float32_t)
-GET_FEATURE_TYPE(F_DREAL, float64_t)
-GET_FEATURE_TYPE(F_LONGREAL, floatmax_t)
-#undef GET_FEATURE_TYPE
 
 
 //template<class T>
@@ -50,13 +39,13 @@ bool CStreamingDenseFeaturesWithDimensionChangingPreprocessors::get_next_example
 	ret_value=(bool)parser.get_next_example(current_vector.vector,
 			current_vector.vlen, current_label);
 
-	for(int32_t pind=0;pind<holds_DimensionChangingPreprocessors->size();++pind)
+	for(int32_t pind=0;pind<holds_DimensionChangingPreprocessors->get_num_elements();++pind)
 	{
 
-		CDimensionChangingPreprocessor *preproc=holds_DimensionChangingPreprocessors->get_element(pind);
-		REQUIRE(current_vector.vlen=preproc->get_inputfeaturedimensionality(),"failed: current_vector.vlen=preproc->get_inputfeaturedimensionality()\n");
-		current_vector=preproc->apply_to_feature_vector(current_vector);
-		preproc=NULL;
+		CDimensionChangingPreprocessor *preproctmp=(CDimensionChangingPreprocessor *)holds_DimensionChangingPreprocessors->get_element(pind);
+		REQUIRE(current_vector.vlen=preproctmp->get_inputfeaturedimensionality(),"failed: current_vector.vlen=preproc->get_inputfeaturedimensionality()\n");
+		current_vector=preproctmp->apply_to_feature_vector(current_vector);
+		preproctmp=NULL;
 	}
 
 	return ret_value;
@@ -73,29 +62,29 @@ float32_t CStreamingDenseFeaturesWithDimensionChangingPreprocessors::dot(CStream
 	ASSERT(df)
 	ASSERT(df->get_feature_type() == get_feature_type())
 	ASSERT(df->get_feature_class() == get_feature_class())
-	CStreamingDenseFeatures<T>* sf=(CStreamingDenseFeatures<T>*)df;
+	CStreamingDenseFeaturesWithDimensionChangingPreprocessors* sf=(CStreamingDenseFeaturesWithDimensionChangingPreprocessors *)df;
 
 	SGVector<float64_t> other_vector=sf->get_vector();
 
-	CDimensionChangingPreprocessor *preproc=holds_DimensionChangingPreprocessors->back();
-	int32_t dimtype=preproc->dimensioncheck(other_vector);
+	CDimensionChangingPreprocessor *preproctmp=(CDimensionChangingPreprocessor *)holds_DimensionChangingPreprocessors->back();
+	int32_t dimtype=preproctmp->dimensioncheck(other_vector);
 	if(dimtype==2)
 	{
 		return SGVector<float64_t>::dot(current_vector.vector, other_vector.vector, current_vector.vlen);
 	}
 	else 	
 	{
-		preproc=holds_DimensionChangingPreprocessors->get_element(0);
-		dimtype=preproc->dimensioncheck(other_vector);
+		preproctmp=(CDimensionChangingPreprocessor *)holds_DimensionChangingPreprocessors->get_element(0);
+		dimtype=preproctmp->dimensioncheck(other_vector);
 		if(dimtype==1)
 		{
-			for(int32_t pind=0;pind<holds_DimensionChangingPreprocessors->size();++pind)
+			for(int32_t pind=0;pind<holds_DimensionChangingPreprocessors->get_num_elements();++pind)
 			{
 
-				preproc=holds_DimensionChangingPreprocessors->get_element(pind);
-				REQUIRE(other_vector.vlen=preproc->get_inputfeaturedimensionality(),"failed: current_vector.vlen=preproc->get_inputfeaturedimensionality()\n");
-				other_vector=preproc->apply_to_feature_vector(other_vector);
-				preproc=NULL;
+				preproctmp=(CDimensionChangingPreprocessor *)holds_DimensionChangingPreprocessors->get_element(pind);
+				REQUIRE(other_vector.vlen=preproctmp->get_inputfeaturedimensionality(),"failed: current_vector.vlen=preproc->get_inputfeaturedimensionality()\n");
+				other_vector=preproctmp->apply_to_feature_vector(other_vector);
+				preproctmp=NULL;
 			}
 			return SGVector<float64_t>::dot(current_vector.vector, other_vector.vector, current_vector.vlen);
 		}
@@ -104,31 +93,32 @@ float32_t CStreamingDenseFeaturesWithDimensionChangingPreprocessors::dot(CStream
 			SG_ERROR("dimensionality of other feature does not match ...365\n");
 		}
 	}
+	return -1;
 
 }
 
 float32_t CStreamingDenseFeaturesWithDimensionChangingPreprocessors::dot(SGVector<float64_t> other_vector)
 {
 
-	CDimensionChangingPreprocessor *preproc=holds_DimensionChangingPreprocessors->back();
-	int32_t dimtype=preproc->dimensioncheck(other_vector);
+	CDimensionChangingPreprocessor *preproctmp=(CDimensionChangingPreprocessor *)holds_DimensionChangingPreprocessors->back();
+	int32_t dimtype=preproctmp->dimensioncheck(other_vector);
 	if(dimtype==2)
 	{
 		return SGVector<float64_t>::dot(current_vector.vector, other_vector.vector, current_vector.vlen);
 	}
 	else 	
 	{
-		preproc=holds_DimensionChangingPreprocessors->get_element(0);
-		dimtype=preproc->dimensioncheck(other_vector);
+		preproctmp=(CDimensionChangingPreprocessor *)holds_DimensionChangingPreprocessors->get_element(0);
+		dimtype=preproctmp->dimensioncheck(other_vector);
 		if(dimtype==1)
 		{
-			for(int32_t pind=0;pind<holds_DimensionChangingPreprocessors->size();++pind)
+			for(int32_t pind=0;pind<holds_DimensionChangingPreprocessors->get_num_elements();++pind)
 			{
 
-				preproc=holds_DimensionChangingPreprocessors->get_element(pind);
-				REQUIRE(other_vector.vlen=preproc->get_inputfeaturedimensionality(),"failed: current_vector.vlen=preproc->get_inputfeaturedimensionality()\n");
-				other_vector=preproc->apply_to_feature_vector(other_vector);
-				preproc=NULL;
+				preproctmp=(CDimensionChangingPreprocessor *)holds_DimensionChangingPreprocessors->get_element(pind);
+				REQUIRE(other_vector.vlen=preproctmp->get_inputfeaturedimensionality(),"failed: current_vector.vlen=preproc->get_inputfeaturedimensionality()\n");
+				other_vector=preproctmp->apply_to_feature_vector(other_vector);
+				preproctmp=NULL;
 			}
 			return SGVector<float64_t>::dot(current_vector.vector, other_vector.vector, current_vector.vlen);
 		}
@@ -138,6 +128,7 @@ float32_t CStreamingDenseFeaturesWithDimensionChangingPreprocessors::dot(SGVecto
 		}
 	}
 
+	return -1;
 }
 
 
@@ -146,8 +137,8 @@ float32_t CStreamingDenseFeaturesWithDimensionChangingPreprocessors::dense_dot(
 {
 
 
-	CDimensionChangingPreprocessor *preproc=holds_DimensionChangingPreprocessors->back();
-	int32_t dimtype=preproc->dimensioncheck2(vec2_len);
+	CDimensionChangingPreprocessor *preproctmp=(CDimensionChangingPreprocessor *)holds_DimensionChangingPreprocessors->back();
+	int32_t dimtype=preproctmp->dimensioncheck2(vec2_len);
 	if(dimtype==2)
 	{
 
@@ -161,8 +152,8 @@ float32_t CStreamingDenseFeaturesWithDimensionChangingPreprocessors::dense_dot(
 	}
 	else 	
 	{
-		preproc=holds_DimensionChangingPreprocessors->get_element(0);
-		dimtype=preproc->dimensioncheck2(vec2_len);
+		preproctmp=(CDimensionChangingPreprocessor *)holds_DimensionChangingPreprocessors->get_element(0);
+		dimtype=preproctmp->dimensioncheck2(vec2_len);
 		if(dimtype==1)
 		{
 
@@ -173,14 +164,14 @@ float32_t CStreamingDenseFeaturesWithDimensionChangingPreprocessors::dense_dot(
 			}
 
 			SGVector<float64_t> other_vector(tmpv,vec2_len);
-			for(int32_t pind=0;pind<holds_DimensionChangingPreprocessors->size();++pind)
+			for(int32_t pind=0;pind<holds_DimensionChangingPreprocessors->get_num_elements();++pind)
 			{
 
-				preproc=holds_DimensionChangingPreprocessors->get_element(pind);
-				REQUIRE(other_vector.vlen=preproc->get_inputfeaturedimensionality(),"failed: current_vector.vlen=preproc->get_inputfeaturedimensionality()\n");
-				other_vector=preproc->apply_to_feature_vector(other_vector);
+				preproctmp=(CDimensionChangingPreprocessor *)holds_DimensionChangingPreprocessors->get_element(pind);
+				REQUIRE(other_vector.vlen=preproctmp->get_inputfeaturedimensionality(),"failed: current_vector.vlen=preproc->get_inputfeaturedimensionality()\n");
+				other_vector=preproctmp->apply_to_feature_vector(other_vector);
 
-				preproc=NULL;
+				preproctmp=NULL;
 			}
 			return SGVector<float64_t>::dot(current_vector.vector, other_vector.vector, current_vector.vlen);
 		}
@@ -190,18 +181,18 @@ float32_t CStreamingDenseFeaturesWithDimensionChangingPreprocessors::dense_dot(
 		}
 	}
 
-
+	return -1;
 
 }
 
 
-float32_t CStreamingDenseFeaturesWithDimensionChangingPreprocessors::dense_dot(
+float64_t CStreamingDenseFeaturesWithDimensionChangingPreprocessors::dense_dot(
 		const float64_t* vec2, int32_t vec2_len)
 {
 
 
-	CDimensionChangingPreprocessor *preproc=holds_DimensionChangingPreprocessors->back();
-	int32_t dimtype=preproc->dimensioncheck2(vec2_len);
+	CDimensionChangingPreprocessor *preproctmp=(CDimensionChangingPreprocessor *)holds_DimensionChangingPreprocessors->back();
+	int32_t dimtype=preproctmp->dimensioncheck2(vec2_len);
 	if(dimtype==2)
 	{
 
@@ -215,29 +206,35 @@ float32_t CStreamingDenseFeaturesWithDimensionChangingPreprocessors::dense_dot(
 	}
 	else 	
 	{
-		preproc=holds_DimensionChangingPreprocessors->get_element(0);
-		dimtype=preproc->dimensioncheck2(vec2_len);
+		preproctmp=(CDimensionChangingPreprocessor *)holds_DimensionChangingPreprocessors->get_element(0);
+		dimtype=preproctmp->dimensioncheck2(vec2_len);
 		if(dimtype==1)
 		{
 
-			SGVector<float64_t> other_vector(vec2,vec2_len);
-			for(int32_t pind=0;pind<holds_DimensionChangingPreprocessors->size();++pind)
+			float64_t tmpv[vec2_len];
+			for(int32_t i=0;i<vec2_len;++i)
+			{
+				tmpv[i]=vec2[i];
+			}
+			SGVector<float64_t> other_vector(tmpv,vec2_len);
+			for(int32_t pind=0;pind<holds_DimensionChangingPreprocessors->get_num_elements();++pind)
 			{
 
-				preproc=holds_DimensionChangingPreprocessors->get_element(pind);
-				REQUIRE(other_vector.vlen=preproc->get_inputfeaturedimensionality(),"failed: current_vector.vlen=preproc->get_inputfeaturedimensionality()\n");
-				other_vector=preproc->apply_to_feature_vector(other_vector);
+				preproctmp=(CDimensionChangingPreprocessor *)holds_DimensionChangingPreprocessors->get_element(pind);
+				REQUIRE(other_vector.vlen=preproctmp->get_inputfeaturedimensionality(),"failed: current_vector.vlen=preproc->get_inputfeaturedimensionality()\n");
+				other_vector=preproctmp->apply_to_feature_vector(other_vector);
 
-				preproc=NULL;
+				preproctmp=NULL;
 			}
 			return SGVector<float64_t>::dot(current_vector.vector, other_vector.vector, current_vector.vlen);
 		}
 		else
 		{
 			SG_ERROR("dimensionality of other feature does not match ...365\n");
+
 		}
 	}
-
+	return -1;
 }
 
 
@@ -247,8 +244,8 @@ void CStreamingDenseFeaturesWithDimensionChangingPreprocessors::add_to_dense_vec
 	//ASSERT(vec2_len==current_vector.vlen)
 
 
-	CDimensionChangingPreprocessor *preproc=holds_DimensionChangingPreprocessors->back();
-	int32_t dimtype=preproc->dimensioncheck2(vec2_len);
+	CDimensionChangingPreprocessor *preproctmp=(CDimensionChangingPreprocessor *)holds_DimensionChangingPreprocessors->back();
+	int32_t dimtype=preproctmp->dimensioncheck2(vec2_len);
 	if(dimtype==2)
 	{
 
@@ -280,8 +277,8 @@ void CStreamingDenseFeaturesWithDimensionChangingPreprocessors::add_to_dense_vec
 	//ASSERT(vec2_len==current_vector.vlen)
 
 
-	CDimensionChangingPreprocessor *preproc=holds_DimensionChangingPreprocessors->back();
-	int32_t dimtype=preproc->dimensioncheck2(vec2_len);
+	CDimensionChangingPreprocessor *preproctmp=(CDimensionChangingPreprocessor *)holds_DimensionChangingPreprocessors->back();
+	int32_t dimtype=preproctmp->dimensioncheck2(vec2_len);
 	if(dimtype==2)
 	{
 
@@ -311,6 +308,106 @@ int32_t CStreamingDenseFeaturesWithDimensionChangingPreprocessors::get_size() co
 	return sizeof(float64_t);
 }
 
+
+CFeatures* CStreamingDenseFeaturesWithDimensionChangingPreprocessors::get_streamed_features(
+		index_t num_elements)
+{
+	SG_DEBUG("entering %s(%p)::get_streamed_features(%d)\n", get_name(), this,
+			num_elements);
+
+	/* init matrix empty since num_rows is not yet known */
+	SGMatrix<float64_t> matrix;
+
+	for (index_t i=0; i<num_elements; ++i)
+	{
+		/* check if we run out of data */
+		if (!get_next_example())
+		{
+			SG_WARNING("%s::get_streamed_features(): ran out of streaming "
+					"data, reallocating matrix and returning!\n", get_name());
+
+			/* allocating space for data so far */
+			SGMatrix<float64_t> so_far(matrix.num_rows, i);
+
+			/* copy */
+			memcpy(so_far.matrix, matrix.matrix,
+					so_far.num_rows*so_far.num_cols*sizeof(float64_t));
+
+			matrix=so_far;
+			break;
+		}
+		else
+		{
+			/* allocate matrix memory during first run */
+			if (!matrix.matrix)
+			{
+				SG_DEBUG("%s::get_streamed_features(): allocating %dx%d matrix\n",
+						get_name(), current_vector.vlen, num_elements);
+				matrix=SGMatrix<float64_t>(current_vector.vlen, num_elements);
+			}
+
+			/* get an example from stream and copy to feature matrix */
+			SGVector<float64_t> vec=get_vector();
+
+			/* check for inconsistent dimensions */
+			if (vec.vlen!=matrix.num_rows)
+			{
+				SG_ERROR("%s::get_streamed_features(): streamed vectors have "
+						"different dimensions. This is not allowed!\n",
+						get_name());
+			}
+
+			/* copy vector into matrix */
+			memcpy(&matrix.matrix[current_vector.vlen*i], vec.vector,
+					vec.vlen*sizeof(float64_t));
+
+			/* evtl output vector */
+			if (sg_io->get_loglevel()==MSG_DEBUG)
+			{
+				SG_DEBUG("%d. ", i)
+				vec.display_vector("streamed vector");
+			}
+
+			/* clean up */
+			release_example();
+		}
+
+	}
+
+	/* create new feature object from collected data */
+	CDenseFeatures<float64_t>* result=new CDenseFeatures<float64_t>(matrix);
+
+	SG_DEBUG("leaving %s(%p)::get_streamed_features(%d) and returning %dx%d "
+			"matrix\n", get_name(), this, num_elements, matrix.num_rows,
+			matrix.num_cols);
+
+	return result;
+}
+
+CFeatures* CStreamingDenseFeaturesWithDimensionChangingPreprocessors::duplicate() const
+{
+
+SG_NOTIMPLEMENTED; //
+return NULL;
+
+/*	
+CStreamingDenseFeaturesWithDimensionChangingPreprocessors *tmp=new CStreamingDenseFeaturesWithDimensionChangingPreprocessors::CStreamingDenseFeatures<float64_t>( this);
+
+	tmp->holds_DimensionChangingPreprocessors=this->holds_DimensionChangingPreprocessors;
+	return(tmp);
+*/
+}
+
+void CStreamingDenseFeaturesWithDimensionChangingPreprocessors::add_DimensionChangingPreprocessor(CDimensionChangingPreprocessor * preprocer)
+{
+	holds_DimensionChangingPreprocessors->push_back(preprocer);
+}
+
+
+void CStreamingDenseFeaturesWithDimensionChangingPreprocessors::init()
+{
+	SG_ADD( (CSGObject **) &holds_DimensionChangingPreprocessors, "holds_DimensionChangingPreprocessors", "holds_DimensionChangingPreprocessors",MS_NOT_AVAILABLE);
+}
 
 //template class CStreamingDenseFeaturesWithDimensionChangingPreprocessors<bool> ;
 //template class CStreamingDenseFeaturesWithDimensionChangingPreprocessors<char> ;

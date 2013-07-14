@@ -129,11 +129,13 @@ public:
 	 */
 	virtual int32_t get_size() const;
 
-//*************************
-
-	void add_DimensionChangingPreprocessor(CDimensionChangingPreprocessor & preprocer);
-
-
+	/** Returns a CDenseFeatures instance which contains num_elements elements
+	 * from the underlying stream
+	 *
+	 * @param num_elements num elements to save from stream
+	 * @return CFeatures object of underlying type, NULL if not enough data
+	 */
+	virtual CFeatures* get_streamed_features(index_t num_elements);
 
 	/**
 	 * Duplicate the object.
@@ -142,15 +144,17 @@ public:
 	 */
 	virtual CFeatures* duplicate() const;
 
+//*************************
+
+	void add_DimensionChangingPreprocessor(CDimensionChangingPreprocessor * preprocer);
 
 
-	/** Returns a CDebseFeatures instance which contains num_elements elements
-	 * from the underlying stream
-	 *
-	 * @param num_elements num elements to save from stream
-	 * @return CFeatures object of underlying type, NULL if not enough data
-	 */
-	virtual CFeatures* get_streamed_features(index_t num_elements);
+
+
+
+
+
+
 
 
 
@@ -158,6 +162,10 @@ public:
 protected:
 
 CDynamicObjectArray* holds_DimensionChangingPreprocessors;
+
+private:
+
+	void init();
 
 };
 
